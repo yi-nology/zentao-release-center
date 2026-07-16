@@ -301,6 +301,7 @@ type zentaoBug struct {
 	Severity interface{} `json:"severity"`
 	Pri      interface{} `json:"pri"`
 	Status   string `json:"status"`
+	Version  string `json:"openedVersion"`
 	AssignedTo struct {
 		Realname string `json:"realname"`
 	} `json:"assignedTo"`
@@ -783,6 +784,23 @@ func (zs *ZentaoProxyService) GetBugs(productID, projectID int, status string, p
 
 func (zs *ZentaoProxyService) GetTasks(executionID, productID int, status string, page, pageSize int) (json.RawMessage, int, int, int, error) {
 	data, err := zs.client.GetTasks(executionID, productID, status, page, pageSize)
+	if err != nil {
+		return nil, 0, 0, 0, err
+	}
+	var result struct {
+		List     json.RawMessage `json:"list"`
+		Total    int             `json:"total"`
+		Page     int             `json:"page"`
+		PageSize int             `json:"pageSize"`
+	}
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, 0, 0, 0, err
+	}
+	return result.List, result.Total, result.Page, result.PageSize, nil
+}
+
+func (zs *ZentaoProxyService) GetClosedBugs(productID, projectID int, page, pageSize int) (json.RawMessage, int, int, int, error) {
+	data, err := zs.client.GetClosedBugs(productID, projectID, page, pageSize)
 	if err != nil {
 		return nil, 0, 0, 0, err
 	}

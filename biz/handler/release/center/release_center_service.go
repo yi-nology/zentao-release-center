@@ -375,6 +375,31 @@ func GetZentaoTasks(ctx context.Context, c *app.RequestContext) {
 	})
 }
 
+func GetZentaoClosedBugs(ctx context.Context, c *app.RequestContext) {
+	var req center.ZentaoBugsReq
+	if err := c.BindAndValidate(&req); err != nil {
+		c.JSON(consts.StatusBadRequest, &center.ZentaoPaginatedResp{Base: &center.BaseResp{Code: 400, Message: err.Error()}})
+		return
+	}
+	page, pageSize := paging(req.GetPage(), req.GetPageSize())
+	list, total, pg, ps, err := appctx.ZentaoProxy.GetClosedBugs(int(req.GetProductId()), int(req.GetProjectId()), page, pageSize)
+	if err != nil {
+		c.JSON(consts.StatusInternalServerError, &center.ZentaoPaginatedResp{Base: &center.BaseResp{Code: 500, Message: err.Error()}})
+		return
+	}
+	ls := ""
+	if list != nil {
+		ls = string(list)
+	}
+	c.JSON(consts.StatusOK, &center.ZentaoPaginatedResp{
+		Base:     &center.BaseResp{Code: 0, Message: "ok"},
+		List:     &ls,
+		Total:    int32(total),
+		Page:     int32(pg),
+		PageSize: int32(ps),
+	})
+}
+
 func GetZentaoProducts(ctx context.Context, c *app.RequestContext) {
 	var req center.ZentaoProductsReq
 	c.BindAndValidate(&req)

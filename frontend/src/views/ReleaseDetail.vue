@@ -253,23 +253,28 @@
         <button class="btn btn-primary btn-sm" @click="loadBugs">加载 Bug</button>
         <button class="btn btn-sm" @click="confirmBugs" :disabled="!selectedBugs.length">确认添加 ({{ selectedBugs.length }})</button>
         <button class="btn btn-sm" @click="showBugSelector = false">关闭</button>
+        <select v-model="selectedBugVersion" class="form-select" style="width:auto;min-width:120px">
+          <option value="">全部版本</option>
+          <option v-for="v in bugVersions" :key="v" :value="v">{{ v }}</option>
+        </select>
         <span v-if="bugTotal > 50" style="color:var(--text-tertiary);font-size:12px;margin-left:auto">
           共 {{ bugTotal }} 条，仅显示前 50 条
         </span>
       </div>
-      <table class="data-table" v-if="bugList.length">
-        <thead><tr><th>选择</th><th>ID</th><th>标题</th><th>严重程度</th><th>状态</th></tr></thead>
+      <table class="data-table" v-if="filteredBugList.length">
+        <thead><tr><th>选择</th><th>ID</th><th>标题</th><th>严重程度</th><th>版本</th><th>状态</th></tr></thead>
         <tbody>
-          <tr v-for="b in bugList" :key="b.id">
+          <tr v-for="b in filteredBugList" :key="b.id">
             <td><input type="checkbox" :value="b" v-model="selectedBugs" /></td>
             <td>{{ b.id }}</td>
             <td>{{ b.title }}</td>
             <td>{{ b.severity }}</td>
+            <td>{{ b.openedVersion || '-' }}</td>
             <td>{{ b.status }}</td>
           </tr>
         </tbody>
       </table>
-      <div v-if="!bugList.length" style="color:var(--text-tertiary);padding:20px;text-align:center">
+      <div v-if="!filteredBugList.length" style="color:var(--text-tertiary);padding:20px;text-align:center">
         {{ bugLoading ? '加载中...' : '点击「加载 Bug」从禅道获取数据（需要项目已关联禅道产品）' }}
       </div>
     </div>
@@ -681,6 +686,7 @@ const taskLoading = ref(false)
 const taskTotal = ref(0)
 const selectedBugs = ref<any[]>([])
 const selectedTasks = ref<any[]>([])
+const selectedBugVersion = ref('')
 const noteForm = ref({ title: '', content: '' })
 const deployForm = ref({ moduleName: '', address: '', description: '' })
 const zentaoBaseUrl = ref('')
@@ -736,6 +742,19 @@ function formatTime(t: string) {
 const bugs = computed(() => items.value.filter(i => i.itemType === 'bug'))
 const tasks = computed(() => items.value.filter(i => i.itemType === 'task'))
 const notes = computed(() => items.value.filter(i => i.itemType === 'note'))
+
+const bugVersions = computed(() => {
+  const versions = new Set<string>()
+  bugList.value.forEach((b: any) => {
+    if (b.openedVersion) versions.add(b.openedVersion)
+  })
+  return Array.from(versions).sort()
+})
+
+const filteredBugList = computed(() => {
+  if (!selectedBugVersion.value) return bugList.value
+  return bugList.value.filter((b: any) => b.openedVersion === selectedBugVersion.value)
+})
 
 function renderMarkdown(md: string): string {
   if (!md) return ''

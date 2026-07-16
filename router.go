@@ -9,4 +9,5 @@ func customizedRegister(r *server.Hertz) {
 	api := r.Group("/api")
 	api.POST("/notify/preview", center.NotifyPreview)
 	api.POST("/notify/send", center.NotifySend)
+	api.GET("/zentao/closed-bugs", center.GetZentaoClosedBugs)
 }

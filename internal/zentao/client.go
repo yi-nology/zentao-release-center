@@ -139,6 +139,25 @@ func (c *Client) GetTasks(executionID, productID int, status string, page, pageS
 	return c.get("/tasks", params)
 }
 
+func (c *Client) GetClosedBugs(productID, projectID int, page, pageSize int) (json.RawMessage, error) {
+	params := map[string]string{
+		"status": "closed",
+	}
+	if productID > 0 {
+		params["productId"] = strconv.Itoa(productID)
+	}
+	if projectID > 0 {
+		params["projectId"] = strconv.Itoa(projectID)
+	}
+	if page > 0 {
+		params["page"] = strconv.Itoa(page)
+	}
+	if pageSize > 0 {
+		params["pageSize"] = strconv.Itoa(pageSize)
+	}
+	return c.get("/bugs", params)
+}
+
 func (c *Client) GetBug(bugID int) (json.RawMessage, error) {
 	return c.get("/bugs", map[string]string{
 		"bugId": strconv.Itoa(bugID),
